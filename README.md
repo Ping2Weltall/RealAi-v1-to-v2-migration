@@ -7,9 +7,18 @@ Now - the main problem is to get your RealAI brain anywhere where it is accessib
 
 I splited it into several parts. 
 
-So far
-Words, PreWords, and ProWords. You can run it on cxxdraid on Android.
+So far 3 C program which should run out of the Box in Cxxdroid:
+migration_v1_Words_v2.c
+migration_v1_PreWords_v2.c
+migration_v1_ProWords_v2.c
 
-For gnu you may need to change the strlcpy to strncpy. Mind the '\0'.
+and one to transfer the Data into a previous exported RealAIv2 Brain for import or merge.
+RuteShi2Brain.py
+
+So far I do not know if it makes sense .. 
+
+You can run it on cxxdraid and pydroid on Android.
+
+For gnu you may need to change the strlcpy to strncpy in the C sources. Mind the '\0'.
 
 #Computeralex

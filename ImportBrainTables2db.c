@@ -24,6 +24,7 @@ Field prewords_fields[] = {{"Id"}, {"Word"}, {"PreWord"}, {"Priority"}, {"Distan
 // Funktion zur Berechnung der Anzahl der Felder
 #define FIELD_COUNT(fields) (sizeof(fields) / sizeof(fields[0]))
 
+
 void transfer_data(const char *source_db, const char *dest_db, const char *table, Field *fields, int field_count)
 {
     sqlite3 *conn1, *conn2;
@@ -33,7 +34,6 @@ void transfer_data(const char *source_db, const char *dest_db, const char *table
 
     char select_query[1024];
     char insert_query[1024];
-    //char placeholders[256] = "";
 
     // Open source database
     rc = sqlite3_open(source_db, &conn1);
@@ -102,6 +102,17 @@ void transfer_data(const char *source_db, const char *dest_db, const char *table
         return;
     }
 
+    // Begin transaction
+    rc = sqlite3_exec(conn2, "BEGIN TRANSACTION", NULL, NULL, &err_msg);
+    if (rc != SQLITE_OK)
+    {
+        fprintf(stderr, "Failed to begin transaction: %s\n", err_msg);
+        sqlite3_free(err_msg);
+        sqlite3_close(conn1);
+        sqlite3_close(conn2);
+        return;
+    }
+
     // Execute data transfer
     while (sqlite3_step(stmt1) == SQLITE_ROW)
     {
@@ -114,6 +125,14 @@ void transfer_data(const char *source_db, const char *dest_db, const char *table
             fprintf(stderr, "Failed to execute insert statement: %s\n", sqlite3_errmsg(conn2));
         }
         sqlite3_reset(stmt2);
+    }
+
+    // Commit transaction
+    rc = sqlite3_exec(conn2, "COMMIT", NULL, NULL, &err_msg);
+    if (rc != SQLITE_OK)
+    {
+        fprintf(stderr, "Failed to commit transaction: %s\n", err_msg);
+        sqlite3_free(err_msg);
     }
 
     // Cleanup

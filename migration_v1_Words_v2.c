@@ -1,5 +1,5 @@
 /*****************************************************************************/
-/* Projekt: RuteShi                                Version  0.0.1.           */
+/* Projekt: RuteShi                                Version  0.0.2.           */
 /*---------------------------------------------------------------------------*/
 /* Modul       : RealAI_Words.c                                              */
 /* Autor       : Alexander J. Herrmann                                       */
@@ -24,7 +24,8 @@
 /*.............+...............+.............................................*/
 /* 20.12.2024  : AJH           : Added TRANSAKTION for faster processing     */
 /*---------------------------------------------------------------------------*/
-/* 20.12.2024  : AJH           : Changed Collum Priority to Frequency Words.  */
+/* 20.12.2024  : AJH           : Changed Collum Priority to Frequency Words  */
+/*             :               : Calculating additional values for RuteShi   */
 /*---------------------------------------------------------------------------*/
 /*    THIS SOFTWARE IS PROVIDED "AS IS" AND WITHOUT ANY EXPRESS OR IMPLIED   */
 /*    WARRANTIES, INCLUDING, WITHOUT LIMITATION, THE IMPLIED WARRANTIES OF   */
@@ -67,12 +68,10 @@
 #define MY_WORDS MY_BRAIN "/Words.txt"
 #define DATABASE_NAME "../RuteShi.db"
 
+#include <sqlite3.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-
-#include <sqlite3.h>
-#include <errno.h>
 
 #define MAX_WORD_LENGTH 100
 #define INITIAL_CAPACITY 100
@@ -84,14 +83,17 @@ typedef struct
     int position;
     char word[MAX_WORD_LENGTH];
     int frequency;
+    double qfactor;
+    double rqfactor;
+    double q2factor;
 } WordData;
 
+
 WordData *read_words(const char *filename, int *num_words);
+int facturize(WordData *data);
 
 int main()
 {
-    // ... other code
-
     sqlite3 *db;
     int rc;
 
@@ -106,7 +108,10 @@ int main()
     const char *sql_create = "CREATE TABLE Words ("
                              "    ID INTEGER PRIMARY KEY AUTOINCREMENT,"
                              "    Word TEXT,"
-                             "    Frequency INTEGER"
+                             "    Frequency INTEGER,"
+                             "    QFactor REAL,"
+                             "    rQFactor REAL,"
+                             "    Q2Factor REAL"
                              ");";
     rc = sqlite3_exec(db, sql_drop, NULL, 0, NULL);
     if (rc != SQLITE_OK)
@@ -123,7 +128,7 @@ int main()
     }
     else
     {
-        const char *sql_insert = "INSERT INTO Words (Word, Frequency) VALUES (?, ?)";
+        const char *sql_insert = "INSERT INTO Words (Word, Frequency, QFactor, rQFactor, Q2Factor) VALUES (?, ?, ?, ?, ?)";
 
         sqlite3_stmt *stmt;
         rc = sqlite3_prepare_v2(db, sql_insert, -1, &stmt, NULL);
@@ -141,7 +146,7 @@ int main()
         sqlite3_finalize(stmt);
     }
     sqlite3_close(db);
-    return 0;
+    return(0);
 }
 
 int dump2sql(sqlite3 *db, sqlite3_stmt *stmt)
@@ -156,8 +161,7 @@ int dump2sql(sqlite3 *db, sqlite3_stmt *stmt)
     {
         return 1;
     }
-    // fprintf(CREATE TABLE )
-    // Use the words array for further processing
+
     rc = sqlite3_exec(db, "BEGIN TRANSACTION", NULL, NULL, &err_msg);
     if (rc != SQLITE_OK)
     {
@@ -172,6 +176,11 @@ int dump2sql(sqlite3 *db, sqlite3_stmt *stmt)
             printf("%0.5xd:%s:L%0.3d:F:%0.3d\n", words[i].position, words[i].word, len, words[i].frequency);
             sqlite3_bind_text(stmt, 1, words[i].word, -1, SQLITE_TRANSIENT);
             sqlite3_bind_int(stmt, 2, words[i].frequency);
+
+            // Corrected binding for double values
+            sqlite3_bind_double(stmt, 3, words[i].qfactor);
+            sqlite3_bind_double(stmt, 4, words[i].rqfactor);
+            sqlite3_bind_double(stmt, 5, words[i].q2factor);
 
             rc = sqlite3_step(stmt);
             if (rc != SQLITE_DONE)
@@ -242,6 +251,7 @@ WordData *read_words(const char *filename, int *num_words)
             strlcpy(words[count].word, word, MAX_WORD_LENGTH);
             words[count].frequency = frequency;
             words[count].position = position;
+            facturize(&words[count]);
             count++;
         }
     }
@@ -249,4 +259,43 @@ WordData *read_words(const char *filename, int *num_words)
     fclose(fp);
     *num_words = count;
     return words;
+}
+
+int facturize(WordData *data)
+{
+    int rc = 0;
+    if (data != NULL)
+    {
+        char *sptr = NULL;
+        if ((data->word != NULL) || (strlen(data->word) > 0))
+        {
+            sptr = data->word;
+            double qfactor = 0;
+            double rqfactor = 0;
+
+            // The calculation work
+            while (*sptr != '\0')
+            {
+                qfactor += *sptr;
+                sptr++;
+            }
+            
+            while (sptr > data->word)
+            {
+                rqfactor += *sptr;
+                sptr--;
+            }
+            data->qfactor = qfactor;
+            data->rqfactor = rqfactor;
+        
+            data->q2factor = qfactor * rqfactor;
+            
+        }
+        else
+        {
+            perror("Empty\n");
+            rc = -1;
+        }
+    }
+    return(rc);
 }

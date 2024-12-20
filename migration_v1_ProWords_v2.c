@@ -1,7 +1,7 @@
 /*****************************************************************************/
 /* Projekt: RuteShi                                Version  0.0.1.           */
 /*---------------------------------------------------------------------------*/
-/* Modul       : RealAI_PreWords.c                                           */
+/* Modul       : RealAI_ProWords.c                                           */
 /* Autor       : Alexander J. Herrmann                                       */
 /* Erstellt    : Dezember 2024                                               */
 /* Than you    : Instead of typing a lot myself on a Android Tablet I used   */
@@ -60,7 +60,7 @@
 /*****************************************************************************/
 
 // You may need to change MY_BRAIN to the directory where your RealAI Textfiles are stored
-#define EXPORT_TYPE "Pre"
+#define EXPORT_TYPE "Pro"
 #define FILE_TYPE EXPORT_TYPE "-"
 #define TABLE_NAME EXPORT_TYPE "Words"
 #define FIELD_NAME EXPORT_TYPE "Word"

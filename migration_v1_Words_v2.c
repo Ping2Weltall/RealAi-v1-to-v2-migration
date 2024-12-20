@@ -24,6 +24,8 @@
 /*.............+...............+.............................................*/
 /* 20.12.2024  : AJH           : Added TRANSAKTION for faster processing     */
 /*---------------------------------------------------------------------------*/
+/* 20.12.2024  : AJH           : Changed Collum Priority to Frequency Words.  */
+/*---------------------------------------------------------------------------*/
 /*    THIS SOFTWARE IS PROVIDED "AS IS" AND WITHOUT ANY EXPRESS OR IMPLIED   */
 /*    WARRANTIES, INCLUDING, WITHOUT LIMITATION, THE IMPLIED WARRANTIES OF   */
 /*            MERCHANTIBILITY AND FITNESS FOR A PARTICULAR PURPOSE.          */
@@ -104,7 +106,7 @@ int main()
     const char *sql_create = "CREATE TABLE Words ("
                              "    ID INTEGER PRIMARY KEY AUTOINCREMENT,"
                              "    Word TEXT,"
-                             "    Priority INTEGER"
+                             "    Frequency INTEGER"
                              ");";
     rc = sqlite3_exec(db, sql_drop, NULL, 0, NULL);
     if (rc != SQLITE_OK)
@@ -121,7 +123,7 @@ int main()
     }
     else
     {
-        const char *sql_insert = "INSERT INTO Words (Word, Priority) VALUES (?, ?)";
+        const char *sql_insert = "INSERT INTO Words (Word, Frequency) VALUES (?, ?)";
 
         sqlite3_stmt *stmt;
         rc = sqlite3_prepare_v2(db, sql_insert, -1, &stmt, NULL);
